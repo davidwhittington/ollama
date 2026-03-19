@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local LLM + RAG Pipeline on Ubuntu 24.04 — Ollama + Open WebUI + Chroma</title>
+  <meta name="description" content="Deploy Ollama, Open WebUI, and a Chroma RAG pipeline on Ubuntu 24.04. Private inference and document search — everything stays on your local network." />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Local LLM + RAG Pipeline on Ubuntu 24.04 — Ollama + Open WebUI + Chroma" />
+  <meta property="og:description" content="Deploy Ollama, Open WebUI, and a Chroma RAG pipeline on Ubuntu 24.04. Private inference and document search — everything stays on your local network." />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Local LLM + RAG Pipeline on Ubuntu 24.04 — Ollama + Open WebUI + Chroma" />
+  <meta name="twitter:description" content="Deploy Ollama, Open WebUI, and a Chroma RAG pipeline on Ubuntu 24.04. Private inference — nothing leaves the local network." />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --code-bg: #1f2937;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 72px 24px 56px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(88, 166, 255, 0.1);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero-subtitle {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 640px;
+      margin: 0 auto 28px;
+    }
+
+    .hero-meta {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+    }
+
+    /* LAYOUT */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .content {
+      padding: 48px 0 80px;
+    }
+
+    /* SECTIONS */
+    section {
+      margin-bottom: 64px;
+    }
+
+    section h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .phase-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: rgba(88, 166, 255, 0.12);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      border-radius: 50%;
+      font-size: 12px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    section h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 28px 0 12px;
+    }
+
+    p {
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    ul, ol {
+      padding-left: 24px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 5px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* BANNERS */
+    .banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border: 1px solid;
+    }
+
+    .banner-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .banner-body {
+      flex: 1;
+    }
+
+    .banner-body strong {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .banner-body p {
+      font-size: 14px;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .banner.info {
+      background: rgba(88, 166, 255, 0.08);
+      border-color: rgba(88, 166, 255, 0.3);
+    }
+
+    .banner.info .banner-body strong {
+      color: var(--accent);
+    }
+
+    .banner.warning {
+      background: rgba(210, 153, 34, 0.08);
+      border-color: rgba(210, 153, 34, 0.35);
+      color: var(--text);
+    }
+
+    .banner.warning .banner-body strong {
+      color: var(--orange);
+    }
+
+    .banner.success {
+      background: rgba(63, 185, 80, 0.08);
+      border-color: rgba(63, 185, 80, 0.35);
+    }
+
+    .banner.success .banner-body strong {
+      color: var(--green);
+    }
+
+    /* CODE BLOCKS */
+    .code-block {
+      position: relative;
+      margin: 16px 0;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: var(--text);
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    .copy-btn.copied {
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    /* SYNTAX COLORS */
+    .cmd  { color: #79c0ff; }
+    .comment { color: #6e7681; font-style: italic; }
+    .flag { color: #d2a8ff; }
+    .str  { color: #a5d6ff; }
+    .kw   { color: #ff7b72; }
+    .env  { color: #ffa657; }
+
+    /* TABLES */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead th {
+      background: var(--surface);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    /* TOC */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 48px;
+    }
+
+    .toc h3 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .toc ol {
+      padding-left: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 4px 24px;
+    }
+
+    .toc li {
+      font-size: 14px;
+    }
+
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .toc a:hover {
+      text-decoration: underline;
+    }
+
+    /* ARCH DIAGRAM */
+    .arch-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin: 16px 0;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .arch-block .arch-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .arch-source  { color: #79c0ff; }
+    .arch-service { color: #a5d6ff; }
+    .arch-arrow   { color: #6e7681; }
+    .arch-note    { color: var(--muted); font-style: italic; }
+    .arch-green   { color: var(--green); }
+
+    /* FLOW BLOCK */
+    .flow-block {
+      background: rgba(88, 166, 255, 0.04);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 16px 0;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 13px;
+      line-height: 1.9;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+
+    .card h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--text);
+      margin: 0;
+    }
+
+    /* SPECS GRID */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .spec-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .spec-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .spec-value {
+      font-size: 14px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--text);
+    }
+
+    /* CHANGELOG */
+    .changelog-entry {
+      display: flex;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+
+    .changelog-entry:last-child {
+      border-bottom: none;
+    }
+
+    .changelog-date {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      min-width: 100px;
+      padding-top: 2px;
+    }
+
+    .changelog-desc {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer .footer-mono {
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      .hero {
+        padding: 48px 16px 40px;
+      }
+
+      .hero-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      nav {
+        padding: 0 16px;
+      }
+
+      .nav-links {
+        gap: 14px;
+      }
+
+      .nav-links a {
+        font-size: 12px;
+      }
+
+      .container {
+        padding: 0 16px;
+      }
+
+      .toc ol {
+        grid-template-columns: 1fr;
+      }
+
+      .specs-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-brand">ollama/docs</span>
+  <ul class="nav-links">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#ollama">Ollama</a></li>
+    <li><a href="#docker">Docker</a></li>
+    <li><a href="#chroma">Chroma</a></li>
+    <li><a href="#open-webui">Open WebUI</a></li>
+    <li><a href="#rag-pipeline">RAG Pipeline</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">OLLAMA &middot; RAG</div>
+  <h1>Local LLM + RAG Pipeline on Ubuntu 24.04</h1>
+  <p class="hero-subtitle">Private inference and document search — everything stays on your local network.</p>
+  <div class="hero-meta">
+    <span class="meta-tag">Ollama</span>
+    <span class="meta-tag">Open WebUI</span>
+    <span class="meta-tag">Chroma</span>
+    <span class="meta-tag">Ubuntu 24.04 LTS</span>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+  <div class="content">
+
+    <!-- OVERVIEW / TOC -->
+    <section id="overview">
+
+      <div class="banner info" style="margin-bottom: 28px;">
+        <span class="banner-icon">&#x2139;&#xfe0f;</span>
+        <div class="banner-body">
+          <strong>Companion Document</strong>
+          <p>This guide assumes the VM is already provisioned. See <code>ubuntu-cloudinit-vm.md</code> in <code>davidwhittington/proxmox</code> for VM setup and cloud-init configuration.</p>
+        </div>
+      </div>
+
+      <h2><span class="phase-num">&#x2605;</span> Overview</h2>
+
+      <p>This guide walks through deploying Ollama on an Ubuntu 24.04 VM, exposing it to the local network, adding Open WebUI as a chat frontend, standing up Chroma as a vector database, and building a RAG ingestion pipeline that indexes files from a Mac. No data leaves your network at any point.</p>
+
+      <div class="specs-grid">
+        <div class="spec-item">
+          <div class="spec-label">OS</div>
+          <div class="spec-value">Ubuntu 24.04.4 LTS</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Host</div>
+          <div class="spec-value">Proxmox VE guest</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">vCPU / RAM</div>
+          <div class="spec-value">6 vCPU · 16 GB</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Disk</div>
+          <div class="spec-value">100 GB</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">SSH alias</div>
+          <div class="spec-value">ollama</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Inference</div>
+          <div class="spec-value">Phase 1: CPU-only</div>
+        </div>
+      </div>
+
+      <div class="toc">
+        <h3>Contents</h3>
+        <ol>
+          <li><a href="#ollama">Install Ollama</a></li>
+          <li><a href="#network">Expose the API to the Network</a></li>
+          <li><a href="#docker">Install Docker</a></li>
+          <li><a href="#chroma">Deploy Chroma</a></li>
+          <li><a href="#open-webui">Deploy Open WebUI</a></li>
+          <li><a href="#embedding">Pull the Embedding Model</a></li>
+          <li><a href="#rag-pipeline">RAG Ingestion Pipeline</a></li>
+          <li><a href="#architecture">Architecture Overview</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+          <li><a href="#phase2">Phase 2 — GPU Passthrough</a></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- PART 1: OLLAMA -->
+    <section id="ollama">
+      <h2><span class="phase-num">1</span> Install Ollama</h2>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code><span class="cmd">ssh</span> ollama
+<span class="cmd">curl</span> <span class="flag">-fsSL</span> https://ollama.com/install.sh | sh</code></pre>
+      </div>
+
+      <p>The installer handles the full setup:</p>
+      <ul>
+        <li>Installs binaries to <code>/usr/local/</code></li>
+        <li>Creates an <code>ollama</code> system user, adds to <code>render</code> and <code>video</code> groups</li>
+        <li>Registers and starts <code>ollama.service</code> via systemd</li>
+        <li>Prints a warning if no GPU is detected — CPU-only mode is fully functional</li>
+      </ul>
+
+      <h3>Verify the installation</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>ollama --version
+sudo systemctl status ollama <span class="flag">--no-pager</span></code></pre>
+      </div>
+
+      <h3>Pull a model</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>ollama pull llama3.2</code></pre>
+      </div>
+
+      <h3>Test inference</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code><span class="cmd">curl</span> http://localhost:11434/api/generate \
+  <span class="flag">-d</span> <span class="str">'{"model":"llama3.2","prompt":"Hello","stream":false}'</span></code></pre>
+      </div>
+    </section>
+
+    <!-- PART 2: NETWORK -->
+    <section id="network">
+      <h2><span class="phase-num">2</span> Expose the API to the Network</h2>
+
+      <p>By default Ollama binds to <code>127.0.0.1:11434</code> (loopback only). To reach it from other machines on the network, override via a systemd drop-in:</p>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>sudo mkdir -p /etc/systemd/system/ollama.service.d
+cat &lt;&lt;EOF | sudo tee /etc/systemd/system/ollama.service.d/override.conf
+[Service]
+<span class="env">Environment</span>=<span class="str">"OLLAMA_HOST=0.0.0.0:11434"</span>
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl restart ollama</code></pre>
+      </div>
+
+      <h3>Verify</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>sudo ss <span class="flag">-tlnp</span> | grep 11434
+<span class="comment"># Expected: LISTEN 0  4096  *:11434  *:*</span></code></pre>
+      </div>
+
+      <h3>Test from another machine</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code><span class="cmd">curl</span> http://{VM_IP}:11434/
+<span class="comment"># Returns: Ollama is running</span></code></pre>
+      </div>
+    </section>
+
+    <!-- PART 3: DOCKER -->
+    <section id="docker">
+      <h2><span class="phase-num">3</span> Install Docker</h2>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code><span class="cmd">curl</span> <span class="flag">-fsSL</span> https://get.docker.com | sudo sh
+sudo usermod <span class="flag">-aG</span> docker {username}</code></pre>
+      </div>
+
+      <p>Log out and back in (or run <code>newgrp docker</code>) for group membership to take effect.</p>
+    </section>
+
+    <!-- PART 4: CHROMA -->
+    <section id="chroma">
+      <h2><span class="phase-num">4</span> Deploy Chroma</h2>
+
+      <p>Chroma stores vector embeddings for the RAG pipeline. Run it as a persistent Docker container:</p>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>docker run <span class="flag">-d</span> \
+  <span class="flag">--name</span> chroma \
+  <span class="flag">--restart</span> always \
+  <span class="flag">-p</span> 8000:8000 \
+  <span class="flag">-v</span> chroma-data:/chroma/chroma \
+  chromadb/chroma</code></pre>
+      </div>
+
+      <div class="banner info">
+        <span class="banner-icon">&#x2139;&#xfe0f;</span>
+        <div class="banner-body">
+          <strong>Chroma v2 API</strong>
+          <p>Chroma's current release uses a v2 API. All endpoints follow the pattern:<br>
+          <code>/api/v2/tenants/{tenant}/databases/{database}/collections/...</code><br>
+          Default tenant: <code>default_tenant</code>. Default database: <code>default_database</code>.</p>
+        </div>
+      </div>
+
+      <h3>Heartbeat check</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code><span class="cmd">curl</span> http://{VM_IP}:8000/api/v2/heartbeat</code></pre>
+      </div>
+    </section>
+
+    <!-- PART 5: OPEN WEBUI -->
+    <section id="open-webui">
+      <h2><span class="phase-num">5</span> Deploy Open WebUI</h2>
+
+      <p>Open WebUI is a ChatGPT-style frontend that connects to Ollama for inference and Chroma for RAG.</p>
+
+      <div class="banner warning">
+        <span class="banner-icon">&#x26A0;&#xFE0F;</span>
+        <div class="banner-body">
+          <strong>Use host.docker.internal — not 127.0.0.1</strong>
+          <p>Inside the container, <code>127.0.0.1</code> resolves to the container itself, not the VM host. Always use <code>host.docker.internal</code> for Ollama and Chroma URLs in the Docker run command.</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>docker run <span class="flag">-d</span> \
+  <span class="flag">--name</span> open-webui \
+  <span class="flag">--restart</span> always \
+  <span class="flag">--add-host</span>=host.docker.internal:host-gateway \
+  <span class="flag">-p</span> 3000:8080 \
+  <span class="flag">-e</span> <span class="env">OLLAMA_BASE_URL</span>=http://host.docker.internal:11434 \
+  <span class="flag">-e</span> <span class="env">VECTOR_DB</span>=chroma \
+  <span class="flag">-e</span> <span class="env">CHROMA_HTTP_HOST</span>=host.docker.internal \
+  <span class="flag">-e</span> <span class="env">CHROMA_HTTP_PORT</span>=8000 \
+  <span class="flag">-e</span> <span class="env">RAG_EMBEDDING_ENGINE</span>=ollama \
+  <span class="flag">-e</span> <span class="env">RAG_EMBEDDING_MODEL</span>=nomic-embed-text \
+  <span class="flag">-e</span> <span class="env">RAG_OLLAMA_BASE_URL</span>=http://host.docker.internal:11434 \
+  <span class="flag">-v</span> open-webui:/app/backend/data \
+  ghcr.io/open-webui/open-webui:main</code></pre>
+      </div>
+
+      <p>Access the interface at <code>http://{VM_IP}:3000</code>. On first visit, create a local admin account — no external accounts or cloud services required.</p>
+
+      <h3>Verify Ollama connectivity from inside the container</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>docker exec open-webui curl <span class="flag">-s</span> http://host.docker.internal:11434/api/tags</code></pre>
+      </div>
+
+      <div class="banner warning">
+        <span class="banner-icon">&#x26A0;&#xFE0F;</span>
+        <div class="banner-body">
+          <strong>nomic-embed-text is not a chat model</strong>
+          <p>In the Open WebUI model dropdown, select <code>llama3.2</code> (or any other chat model). Do not select <code>nomic-embed-text</code> — it is an embedding-only model and cannot respond to chat prompts. Selecting it will produce a "does not support chat" error.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 6: EMBEDDING -->
+    <section id="embedding">
+      <h2><span class="phase-num">6</span> Pull the Embedding Model</h2>
+
+      <p>RAG requires a separate embedding model. <code>nomic-embed-text</code> is recommended: fast, accurate, and efficient on CPU.</p>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>ollama pull nomic-embed-text</code></pre>
+      </div>
+
+      <div class="card">
+        <h4>What embedding models do</h4>
+        <p>Embedding models convert text into high-dimensional vectors that represent semantic meaning. They have no concept of conversation — they only transform text into numbers. <code>nomic-embed-text</code> runs silently in the background during RAG queries. You never interact with it directly.</p>
+      </div>
+
+      <h3>RAG query flow</h3>
+      <div class="flow-block">
+        Your question<br>
+        &nbsp;&nbsp;&#x2192; nomic-embed-text &rarr; query vector<br>
+        &nbsp;&nbsp;&#x2192; Chroma similarity search &rarr; relevant file chunks<br>
+        &nbsp;&nbsp;&#x2192; llama3.2 (question + chunks as context) &rarr; answer
+      </div>
+    </section>
+
+    <!-- PART 7: RAG PIPELINE -->
+    <section id="rag-pipeline">
+      <h2><span class="phase-num">7</span> RAG Ingestion Pipeline</h2>
+
+      <p>The ingestion script runs on the source machine (Mac), walks a directory, extracts and chunks text, embeds via Ollama, and upserts into Chroma.</p>
+
+      <h3>Install dependencies</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>pip3 install <span class="flag">--break-system-packages</span> requests pypdf python-docx</code></pre>
+      </div>
+
+      <h3>How it works</h3>
+      <ol>
+        <li>Walks <code>/Users/{username}</code> recursively (or a specified subdirectory)</li>
+        <li>Skips non-content directories — package caches, build artifacts, media libraries, IDE caches</li>
+        <li>Extracts text based on file type</li>
+        <li>Chunks text into ~800 character segments with 150 character overlap</li>
+        <li>Sends all chunks for a file to Ollama in a single batch embed request</li>
+        <li>Upserts into Chroma with metadata: source path, chunk index, modified time, extension</li>
+        <li>On each full run: removes orphaned chunks (files deleted from disk) before indexing</li>
+      </ol>
+
+      <h3>Supported file types</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Extensions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Docs</td>
+              <td><code>.txt</code>, <code>.md</code>, <code>.rst</code>, <code>.org</code>, <code>.tex</code></td>
+            </tr>
+            <tr>
+              <td>Code</td>
+              <td><code>.py</code>, <code>.js</code>, <code>.ts</code>, <code>.swift</code>, <code>.go</code>, <code>.rs</code>, <code>.c</code>, <code>.cpp</code>, <code>.sh</code>, <code>.sql</code>, and more</td>
+            </tr>
+            <tr>
+              <td>Config</td>
+              <td><code>.json</code>, <code>.yaml</code>, <code>.toml</code>, <code>.ini</code>, <code>.csv</code>, <code>.xml</code></td>
+            </tr>
+            <tr>
+              <td>Web</td>
+              <td><code>.html</code>, <code>.css</code>, <code>.scss</code>, <code>.svelte</code>, <code>.vue</code></td>
+            </tr>
+            <tr>
+              <td>Documents</td>
+              <td><code>.pdf</code> (pypdf), <code>.docx</code> (python-docx)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Skipped directories</h3>
+      <ul>
+        <li><strong>Version control:</strong> <code>.git</code></li>
+        <li><strong>Package caches:</strong> <code>node_modules</code>, <code>go/pkg</code>, <code>.cargo</code>, <code>.gem</code>, <code>.gradle</code>, <code>.m2</code>, <code>.npm</code>, <code>.yarn</code></li>
+        <li><strong>Build output:</strong> <code>dist</code>, <code>build</code>, <code>DerivedData</code>, <code>target</code>, <code>.next</code></li>
+        <li><strong>Apple media/system:</strong> <code>Music/Music/Media.localized</code>, <code>Photos Library.photoslibrary</code>, <code>Library/Caches</code>, <code>Library/Developer</code>, <code>Library/Containers</code></li>
+        <li><strong>IDE:</strong> <code>Xcode</code>, <code>iOS DeviceSupport</code></li>
+        <li><strong>Misc:</strong> <code>__pycache__</code>, <code>venv</code>, <code>.venv</code>, <code>tmp</code>, <code>temp</code></li>
+      </ul>
+
+      <h3>Run the index</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code><span class="comment"># Full index (background, recommended for large home directories)</span>
+nohup python3 ~/rag-ingest.py > ~/rag-ingest.log 2>&amp;1 &amp;
+
+<span class="comment"># Monitor progress</span>
+tail <span class="flag">-f</span> ~/rag-ingest.log
+
+<span class="comment"># Check chunk count</span>
+python3 ~/rag-ingest.py <span class="flag">--stats</span></code></pre>
+      </div>
+
+      <h3>CLI flags</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Flag</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--path /some/dir</code></td>
+              <td>Index a specific directory instead of the default</td>
+            </tr>
+            <tr>
+              <td><code>--stats</code></td>
+              <td>Show total chunk count in Chroma</td>
+            </tr>
+            <tr>
+              <td><code>--delete /path/to/file</code></td>
+              <td>Remove a specific file's chunks from the index</td>
+            </tr>
+            <tr>
+              <td><code>--cleanup</code></td>
+              <td>Remove orphaned chunks only, no indexing</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Idempotency and cleanup</h3>
+      <p>Chunk IDs are derived from a SHA-256 hash of the file path plus the chunk index. Re-running the script overwrites existing chunks — it never creates duplicates.</p>
+      <p>On every full run, the script first scans all source paths stored in Chroma and removes any whose files no longer exist on disk. This keeps the index accurate without manual intervention.</p>
+
+      <h3>Removing sensitive files</h3>
+      <p>Files can be removed from the index at any time without re-indexing everything:</p>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        <pre><code>python3 ~/rag-ingest.py <span class="flag">--delete</span> /Users/{username}/path/to/sensitive/file</code></pre>
+      </div>
+    </section>
+
+    <!-- PART 8: ARCHITECTURE -->
+    <section id="architecture">
+      <h2><span class="phase-num">8</span> Architecture Overview</h2>
+
+      <p>All components communicate over the local network. The source machine handles text extraction and chunking; the VM runs all inference and stores vectors.</p>
+
+      <div class="arch-block">
+        <span class="arch-label">Data flow</span>
+<span class="arch-source">Source machine (/Users/{username})</span>
+  └── <span class="arch-service">rag-ingest.py</span>
+        ├── text extraction + chunking
+        ├── <span class="arch-arrow">→</span> <span class="arch-service">Ollama:{VM_IP}:11434</span> <span class="arch-note">(nomic-embed-text → vectors)</span>
+        └── <span class="arch-arrow">→</span> <span class="arch-service">Chroma:{VM_IP}:8000</span> <span class="arch-note">(upsert chunks + vectors)</span>
+
+<span class="arch-source">Browser</span>
+  └── <span class="arch-service">Open WebUI → http://{VM_IP}:3000</span>
+        ├── <span class="arch-arrow">→</span> <span class="arch-service">Ollama</span> (host.docker.internal:11434) <span class="arch-note">— chat inference</span>
+        ├── <span class="arch-arrow">→</span> <span class="arch-service">Ollama</span> (host.docker.internal:11434) <span class="arch-note">— query embedding</span>
+        └── <span class="arch-arrow">→</span> <span class="arch-service">Chroma</span> (host.docker.internal:8000) <span class="arch-note">— vector similarity search</span>
+
+<span class="arch-green">All traffic stays on the local network.</span></div>
+    </section>
+
+    <!-- TROUBLESHOOTING -->
+    <section id="troubleshooting">
+      <h2><span class="phase-num">&#x21AF;</span> Troubleshooting</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Symptom</th>
+              <th>Cause</th>
+              <th>Fix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>"does not support chat" in Open WebUI</td>
+              <td><code>nomic-embed-text</code> selected as chat model</td>
+              <td>Switch to a chat model (e.g. <code>llama3.2</code>) in the model dropdown</td>
+            </tr>
+            <tr>
+              <td>"Connect a model" on Open WebUI load</td>
+              <td><code>OLLAMA_BASE_URL=http://127.0.0.1</code> resolves to container</td>
+              <td>Use <code>http://host.docker.internal:11434</code></td>
+            </tr>
+            <tr>
+              <td>Embed timeouts during ingest</td>
+              <td>CPU embedding is slow; Ollama busy</td>
+              <td>Script retries 3x with backoff; reduce file sizes or add <code>--path</code> to index in batches</td>
+            </tr>
+            <tr>
+              <td>Chroma 410 Gone errors</td>
+              <td>Chroma v2 uses different API paths</td>
+              <td>Update to <code>/api/v2/tenants/default_tenant/databases/default_database/...</code></td>
+            </tr>
+            <tr>
+              <td>VM IP not in ARP table after boot</td>
+              <td>DHCP lease held by router, not Proxmox</td>
+              <td>Ping-sweep the subnet: <code>for i in $(seq 1 254); do ping -c1 -W1 192.168.X.$i &amp;>/dev/null &amp; done; wait; arp -an</code></td>
+            </tr>
+            <tr>
+              <td>Ingest stuck on one directory for hours</td>
+              <td>Package cache or media library in path</td>
+              <td>Kill the process, add the directory to <code>SKIP_DIRS</code> in the script, restart</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PHASE 2 -->
+    <section id="phase2">
+      <h2><span class="phase-num">2</span> Phase 2 — GPU Passthrough</h2>
+
+      <div class="banner info">
+        <span class="banner-icon">&#x1F4AC;</span>
+        <div class="banner-body">
+          <strong>Future work</strong>
+          <p>See <code>davidwhittington/proxmox — docs/proxmox-egpu-spec.md</code> for the full Thunderbolt 4 eGPU passthrough implementation. Once complete, Ollama will use the AMD Vega 56 GPU via ROCm/Vulkan backend, reducing 8B model inference from ~2-3 seconds to under 200ms.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHANGELOG -->
+    <section id="changelog">
+      <h2><span class="phase-num">&#x2713;</span> Changelog</h2>
+
+      <div class="changelog-entry">
+        <span class="changelog-date">2026-03-18</span>
+        <span class="changelog-desc">Initial setup and RAG pipeline documented</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-mono">davidwhittington/ollama &middot; ollama/docs &nbsp;&middot;&nbsp; 2026-03-18</p>
+</footer>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.nextElementSibling;
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
