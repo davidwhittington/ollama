@@ -340,17 +340,32 @@
     </div>
   </a>
 
-  <a class="guide-card" href="#">
+  <a class="guide-card" href="ollama-models.html">
+    <div class="guide-card-header">
+      <h2>Model Reference &amp; Catalog</h2>
+      <span class="guide-card-badge">&#10003; Current</span>
+    </div>
+    <p>
+      Curated reference for models available through Ollama — installed stack, RAM requirements,
+      use cases, and notes on privacy. Chat, code, reasoning, embedding, and vision models covered.
+    </p>
+    <div class="guide-card-tags">
+      <span class="tag">llama3.1:70b</span>
+      <span class="tag">mistral:7b</span>
+      <span class="tag">codellama</span>
+      <span class="tag">deepseek-coder</span>
+      <span class="tag">nomic-embed-text</span>
+    </div>
+  </a>
+
+  <a class="guide-card" href="https://davidwhittington.github.io/proxmox/proxmox-egpu.html" target="_blank" rel="noopener">
     <div class="guide-card-header">
       <h2>GPU-Accelerated Inference — Vega 56</h2>
-      <span class="guide-card-badge phase">Phase 2</span>
+      <span class="guide-card-badge" style="background:rgba(63,185,80,0.12);color:#3fb950;">&#10003; Complete</span>
     </div>
     <p>
       AMD Vega 56 GPU passthrough via Thunderbolt 4 eGPU. ROCm deprecation workaround, Vulkan backend
       for Ollama, and the full vendor-reset story. Documented in the Proxmox lab.
-    </p>
-    <p class="card-note">
-      See full walkthrough &rarr; <a href="https://davidwhittington.github.io/proxmox/proxmox-egpu.html" target="_blank" rel="noopener">proxmox lab: TB4 eGPU Passthrough</a>
     </p>
     <div class="guide-card-tags">
       <span class="tag">gpu-passthrough</span>
@@ -386,7 +401,7 @@
       </div>
       <div class="hw-item">
         <div class="hw-item-label">Inference</div>
-        <div class="hw-item-value">CPU Phase 1 &middot; GPU Phase 2</div>
+        <div class="hw-item-value">Vulkan &middot; Vega 56 (85 tok/s)</div>
       </div>
     </div>
   </div>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ollama Model Reference — Local LLM Catalog</title>
+  <meta name="description" content="Curated reference for Ollama models — sizes, RAM requirements, use cases, and notes on privacy. Chat, code, reasoning, embedding, and vision models." />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Ollama Model Reference — Local LLM Catalog" />
+  <meta property="og:description" content="Curated reference for Ollama models — sizes, RAM requirements, use cases, and notes on privacy." />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Ollama Model Reference — Local LLM Catalog" />
+  <meta name="twitter:description" content="Curated reference for Ollama models — sizes, RAM requirements, and use cases." />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --code-bg: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      text-align: center;
+      padding: 72px 24px 56px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(88,166,255,0.1);
+      border: 1px solid rgba(88,166,255,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .hero-sub {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 540px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .layout {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin: 48px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2:first-of-type { margin-top: 0; }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 32px 0 12px;
+    }
+
+    p {
+      color: var(--muted);
+      margin-bottom: 12px;
+      max-width: 720px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 20px 0 32px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    td {
+      padding: 10px 16px;
+      vertical-align: middle;
+      color: var(--text);
+    }
+
+    td:first-child {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      color: var(--green);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .badge-chat    { background: rgba(88,166,255,0.12); color: var(--accent); }
+    .badge-code    { background: rgba(63,185,80,0.12);  color: var(--green); }
+    .badge-embed   { background: rgba(188,140,255,0.12); color: var(--purple); }
+    .badge-reason  { background: rgba(210,153,34,0.12);  color: var(--orange); }
+    .badge-vision  { background: rgba(248,81,73,0.12);   color: var(--red); }
+
+    .badge-installed { background: rgba(63,185,80,0.12); color: var(--green); }
+
+    /* Note box */
+    .note {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: var(--text);
+      max-width: 720px;
+    }
+
+    .note.green  { border-left-color: var(--green); }
+    .note.orange { border-left-color: var(--orange); }
+
+    .note strong { color: var(--text); }
+    .note code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      background: var(--code-bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--green);
+    }
+
+    /* Code blocks */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px 20px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12.5px;
+      line-height: 1.7;
+      overflow-x: auto;
+      margin: 12px 0 24px;
+      color: #e6edf3;
+    }
+
+    .code-block .comment { color: var(--muted); }
+    .code-block .cmd     { color: var(--green); }
+    .code-block .arg     { color: var(--accent); }
+
+    /* Section divider */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 48px 0;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      .hero { padding: 48px 16px 40px; }
+      .layout { padding: 32px 16px 48px; }
+      nav { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">&#129422; ollama</a>
+  <ul class="nav-links">
+    <li><a href="ollama-rag-setup.html">RAG Guide</a></li>
+    <li><a href="https://github.com/davidwhittington/ollama" target="_blank" rel="noopener">GitHub</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">&#128209; model reference</div>
+  <h1>Ollama Model Catalog</h1>
+  <p class="hero-sub">Curated reference covering installed models and notable options from the Ollama library — sizes, RAM requirements, and what each model is actually good for.</p>
+</div>
+
+<div class="layout">
+
+  <h2>Installed on This Stack</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Size</th>
+          <th>Type</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>llama3.2:latest</td>
+          <td>2.0 GB</td>
+          <td><span class="badge badge-chat">chat</span></td>
+          <td>Meta's compact baseline — fast, general-purpose</td>
+        </tr>
+        <tr>
+          <td>llama3.1:70b</td>
+          <td>~40 GB</td>
+          <td><span class="badge badge-chat">chat</span></td>
+          <td>Full-scale 70B — needs 48GB+ RAM or GPU VRAM</td>
+        </tr>
+        <tr>
+          <td>codellama:7b</td>
+          <td>3.8 GB</td>
+          <td><span class="badge badge-code">code</span></td>
+          <td>Code completion and explanation, any language</td>
+        </tr>
+        <tr>
+          <td>mistral:7b</td>
+          <td>4.4 GB</td>
+          <td><span class="badge badge-chat">chat</span></td>
+          <td>Fast and capable — strong all-rounder at 7B scale</td>
+        </tr>
+        <tr>
+          <td>deepseek-coder:6.7b</td>
+          <td>3.8 GB</td>
+          <td><span class="badge badge-code">code</span></td>
+          <td>Chinese open-source code model — fully local, no callbacks</td>
+        </tr>
+        <tr>
+          <td>nomic-embed-text</td>
+          <td>274 MB</td>
+          <td><span class="badge badge-embed">embed</span></td>
+          <td>Text embeddings only — powers the RAG pipeline</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>RAM Requirements at a Glance</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model Size</th>
+          <th>RAM Needed (Q4)</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>3B</td><td>~4 GB</td><td>Runs on almost anything</td></tr>
+        <tr><td>7B</td><td>~6–8 GB</td><td>Comfortable on 8GB+</td></tr>
+        <tr><td>13B</td><td>~10–12 GB</td><td>16GB recommended</td></tr>
+        <tr><td>34B</td><td>~24–28 GB</td><td>32GB+ needed</td></tr>
+        <tr><td>70B</td><td>~38–42 GB</td><td>48GB+ recommended</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note orange">
+    <strong>llama3.1:70b on CPU:</strong> Without enough RAM, the model memory-maps to disk and runs at 1–2 tok/s — technically functional, not practical for chat. With 48GB RAM and the Vega 56 via Vulkan, it loads fully and runs at usable speeds. Use smaller models (llama3.1, mistral:7b) for interactive sessions where speed matters.
+  </div>
+
+  <hr />
+
+  <h2>Catalog — Chat &amp; Instruction</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Params</th>
+          <th>Size</th>
+          <th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>llama3.2</td>
+          <td>3B</td><td>2.0 GB</td>
+          <td>Fast general chat, edge/embedded use</td>
+        </tr>
+        <tr>
+          <td>llama3.2:1b</td>
+          <td>1B</td><td>1.3 GB</td>
+          <td>Minimum viable — very fast, basic quality</td>
+        </tr>
+        <tr>
+          <td>llama3.1</td>
+          <td>8B</td><td>4.7 GB</td>
+          <td>Solid general-purpose, strong instruction following</td>
+        </tr>
+        <tr>
+          <td>llama3.1:70b</td>
+          <td>70B</td><td>40 GB</td>
+          <td>Highest quality open model at this class</td>
+        </tr>
+        <tr>
+          <td>mistral</td>
+          <td>7B</td><td>4.1 GB</td>
+          <td>Punches above its weight, Apache 2.0 licensed</td>
+        </tr>
+        <tr>
+          <td>mistral-nemo</td>
+          <td>12B</td><td>7.1 GB</td>
+          <td>Mistral + Nvidia collaboration, strong context handling</td>
+        </tr>
+        <tr>
+          <td>mixtral</td>
+          <td>8x7B MoE</td><td>26 GB</td>
+          <td>Mixture-of-experts — high quality, memory-hungry</td>
+        </tr>
+        <tr>
+          <td>gemma2</td>
+          <td>9B</td><td>5.4 GB</td>
+          <td>Google's open model — competitive at 9B</td>
+        </tr>
+        <tr>
+          <td>gemma2:2b</td>
+          <td>2B</td><td>1.6 GB</td>
+          <td>Smallest Gemma, good for lightweight tasks</td>
+        </tr>
+        <tr>
+          <td>phi4</td>
+          <td>14B</td><td>8.9 GB</td>
+          <td>Microsoft's small model with outsized reasoning ability</td>
+        </tr>
+        <tr>
+          <td>phi4-mini</td>
+          <td>3.8B</td><td>2.5 GB</td>
+          <td>Ultra-efficient, strong at math and structured tasks</td>
+        </tr>
+        <tr>
+          <td>qwen2.5</td>
+          <td>7B</td><td>4.7 GB</td>
+          <td>Alibaba — multilingual, strong coding</td>
+        </tr>
+        <tr>
+          <td>qwen2.5:72b</td>
+          <td>72B</td><td>47 GB</td>
+          <td>Top-tier open model, competitive with GPT-4 class</td>
+        </tr>
+        <tr>
+          <td>command-r</td>
+          <td>35B</td><td>20 GB</td>
+          <td>Cohere — RAG-optimized, strong retrieval tasks</td>
+        </tr>
+        <tr>
+          <td>command-r-plus</td>
+          <td>104B</td><td>59 GB</td>
+          <td>Cohere flagship — excellent at tool use and RAG</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Catalog — Code Models</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Params</th>
+          <th>Size</th>
+          <th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>codellama</td>
+          <td>7B</td><td>3.8 GB</td>
+          <td>Meta's code model — multi-language, solid baseline</td>
+        </tr>
+        <tr>
+          <td>codellama:13b</td>
+          <td>13B</td><td>7.4 GB</td>
+          <td>Better quality code, still manageable size</td>
+        </tr>
+        <tr>
+          <td>codellama:34b</td>
+          <td>34B</td><td>19 GB</td>
+          <td>Best CodeLlama tier — approaches GPT-4 on code</td>
+        </tr>
+        <tr>
+          <td>deepseek-coder</td>
+          <td>6.7B</td><td>3.8 GB</td>
+          <td>Strong code model, fully local — see note below</td>
+        </tr>
+        <tr>
+          <td>deepseek-coder:33b</td>
+          <td>33B</td><td>19 GB</td>
+          <td>Competes with GPT-4 on HumanEval benchmarks</td>
+        </tr>
+        <tr>
+          <td>deepseek-coder-v2</td>
+          <td>16B</td><td>8.9 GB</td>
+          <td>V2 architecture — significant improvement over v1</td>
+        </tr>
+        <tr>
+          <td>codegemma</td>
+          <td>7B</td><td>5.0 GB</td>
+          <td>Google's code model, Apache 2.0</td>
+        </tr>
+        <tr>
+          <td>starcoder2</td>
+          <td>15B</td><td>9.1 GB</td>
+          <td>BigCode open model, trained on 600+ languages</td>
+        </tr>
+        <tr>
+          <td>qwen2.5-coder</td>
+          <td>7B</td><td>4.7 GB</td>
+          <td>Strong recent code model from Alibaba</td>
+        </tr>
+        <tr>
+          <td>qwen2.5-coder:32b</td>
+          <td>32B</td><td>19 GB</td>
+          <td>One of the best open-source code models available</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Catalog — Reasoning &amp; Math</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Params</th>
+          <th>Size</th>
+          <th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>deepseek-r1</td>
+          <td>7B</td><td>4.7 GB</td>
+          <td>DeepSeek reasoning model — chain-of-thought, math</td>
+        </tr>
+        <tr>
+          <td>deepseek-r1:14b</td>
+          <td>14B</td><td>9.0 GB</td>
+          <td>Better reasoning, runs on 16GB</td>
+        </tr>
+        <tr>
+          <td>deepseek-r1:70b</td>
+          <td>70B</td><td>43 GB</td>
+          <td>Strong reasoning — needs 48GB+</td>
+        </tr>
+        <tr>
+          <td>phi4</td>
+          <td>14B</td><td>8.9 GB</td>
+          <td>Microsoft reasoning-focused — punches well above its size</td>
+        </tr>
+        <tr>
+          <td>qwq</td>
+          <td>32B</td><td>20 GB</td>
+          <td>Alibaba QwQ — strong at math, long reasoning chains</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Catalog — Embedding Models</h2>
+
+  <p>Embedding models convert text to vectors. They cannot generate responses. They are the backbone of any RAG pipeline — use them to index documents and search by semantic similarity.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Size</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>nomic-embed-text</td>
+          <td>274 MB</td>
+          <td>Fast local embeddings — powers this RAG stack</td>
+        </tr>
+        <tr>
+          <td>nomic-embed-text:v1.5</td>
+          <td>274 MB</td>
+          <td>Updated version, same size, better retrieval performance</td>
+        </tr>
+        <tr>
+          <td>mxbai-embed-large</td>
+          <td>669 MB</td>
+          <td>Higher quality embeddings, slower</td>
+        </tr>
+        <tr>
+          <td>snowflake-arctic-embed</td>
+          <td>137 MB</td>
+          <td>Strong retrieval performance, compact</td>
+        </tr>
+        <tr>
+          <td>all-minilm</td>
+          <td>46 MB</td>
+          <td>Smallest viable option — lower quality at extremes</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Catalog — Vision &amp; Multimodal</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Params</th>
+          <th>Size</th>
+          <th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>llava</td>
+          <td>7B</td><td>4.5 GB</td>
+          <td>Image + text — describe images, answer visual questions</td>
+        </tr>
+        <tr>
+          <td>llava:13b</td>
+          <td>13B</td><td>8.0 GB</td>
+          <td>Better visual quality, same interface</td>
+        </tr>
+        <tr>
+          <td>llava-phi3</td>
+          <td>3.8B</td><td>2.9 GB</td>
+          <td>Compact multimodal, good speed</td>
+        </tr>
+        <tr>
+          <td>moondream</td>
+          <td>1.8B</td><td>1.7 GB</td>
+          <td>Lightweight image model — edge/embedded use</td>
+        </tr>
+        <tr>
+          <td>bakllava</td>
+          <td>7B</td><td>4.5 GB</td>
+          <td>LLaVA variant with Mistral backbone</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr />
+
+  <h2>Model Notes</h2>
+
+  <h3>DeepSeek-Coder — Privacy and Trust</h3>
+
+  <div class="note green">
+    <strong>Short version: safe to use locally.</strong> DeepSeek is a Chinese AI lab. The concern some raise relates to their hosted API product — not the open-weight models. The model weights distributed via Ollama are static files. There is no telemetry, no runtime network connection, and no callback to DeepSeek's infrastructure. The model runs entirely offline once pulled. MIT/Apache 2.0 licensed.
+  </div>
+
+  <h3>nomic-embed-text — Embedding vs. Chat</h3>
+
+  <p>This model is embedding-only. It takes text and returns a vector — it cannot generate responses. That's what powers the RAG pipeline: convert a query to a vector, find the closest matching document chunks in Chroma, inject those chunks into the prompt context for the chat model.</p>
+
+  <p>If you select it as a chat model in Open WebUI, you'll get a "does not support chat" error. This is expected. It's not broken — it just serves a different purpose.</p>
+
+  <h3>llama3.1:70b — Practical Expectations</h3>
+
+  <p>On this stack with the Vega 56 GPU (8GB VRAM) via Vulkan, Ollama offloads as many layers as VRAM allows and runs the remainder on CPU. With 48GB system RAM, the full model fits in memory. Expect 20–40 tok/s depending on context length. Without GPU, CPU-only drops to 1–5 tok/s — technically functional, not suitable for interactive chat.</p>
+
+  <p>For fast interactive sessions: use <code>llama3.1</code> (8B) or <code>mistral:7b</code>. Reserve 70B for tasks where output quality matters more than speed — long-form writing, complex analysis, summarization.</p>
+
+  <hr />
+
+  <h2>CLI Reference</h2>
+
+  <div class="code-block"><span class="comment"># List installed models</span>
+<span class="cmd">ollama list</span>
+
+<span class="comment"># Pull a model</span>
+<span class="cmd">ollama pull</span> <span class="arg">mistral:7b</span>
+
+<span class="comment"># Run a model interactively</span>
+<span class="cmd">ollama run</span> <span class="arg">mistral:7b</span>
+
+<span class="comment"># Remove a model</span>
+<span class="cmd">ollama rm</span> <span class="arg">codellama:7b</span>
+
+<span class="comment"># Show model metadata</span>
+<span class="cmd">ollama show</span> <span class="arg">llama3.2</span>
+
+<span class="comment"># Check which models are currently loaded in memory</span>
+<span class="cmd">curl</span> http://localhost:11434/api/ps | python3 -m json.tool
+
+<span class="comment"># Monitor a pull in progress</span>
+<span class="cmd">tail -f</span> /tmp/llama70b-pull.log</div>
+
+</div>
+
+<footer>
+  <p><a href="https://github.com/davidwhittington/ollama" target="_blank" rel="noopener">github.com/davidwhittington/ollama</a> &nbsp;&middot;&nbsp; <a href="index.html">Ollama Guides</a> &nbsp;&middot;&nbsp; 2026</p>
+</footer>
+
+</body>
+</html>
